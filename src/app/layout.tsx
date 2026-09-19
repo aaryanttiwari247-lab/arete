@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'DayTrack | Personal Routine, Wellness & Activity Platform',
+  title: 'AryanDailyTrack | Personal Routine, Wellness & Productivity Platform',
   description:
-    'Plan, track, understand, and improve your daily routine, productivity, studies, workouts, meals, and sleep with DayTrack.',
+    'Plan, track, understand, and improve your daily routine, productivity, studies, workouts, meals, and sleep with AryanDailyTrack.',
 };
 
 export default function RootLayout({
