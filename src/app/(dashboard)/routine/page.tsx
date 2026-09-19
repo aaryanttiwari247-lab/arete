@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import { RoutineItem, ActivityCategory, ActivityPriority } from '@/types/models';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
@@ -12,11 +12,8 @@ import { Select } from '@/ui/Select';
 import {
   CalendarDays,
   Plus,
-  Clock,
   Trash2,
   Edit2,
-  RefreshCw,
-  Sparkles,
   Info,
   BookOpen,
   Dumbbell,
@@ -26,6 +23,7 @@ import {
   Code2,
   BookMarked,
   UserCheck,
+  Sparkles,
 } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
@@ -55,9 +53,9 @@ export default function RoutinePage() {
   const [reminderMinutes, setReminderMinutes] = useState('10');
   const [notes, setNotes] = useState('');
 
-  const currentDayItems = routineItems.filter(item =>
-    item.daysOfWeek.includes(selectedDay)
-  );
+  const currentDayItems = useMemo(() => {
+    return routineItems.filter(item => item.daysOfWeek.includes(selectedDay));
+  }, [routineItems, selectedDay]);
 
   const getCategoryIcon = (category: ActivityCategory) => {
     switch (category) {

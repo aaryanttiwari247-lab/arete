@@ -13,12 +13,8 @@ import {
   Utensils,
   Droplets,
   Plus,
-  Clock,
   Trash2,
   Sliders,
-  Sparkles,
-  Info,
-  CheckCircle2,
 } from 'lucide-react';
 
 export default function MealsAndWaterPage() {
@@ -215,14 +211,20 @@ export default function MealsAndWaterPage() {
               <span className="font-semibold text-[var(--text-secondary)] whitespace-nowrap">
                 Today's logs:
               </span>
-              {waterLogs.map(wl => (
-                <span
-                  key={wl.id}
-                  className="px-2 py-0.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] whitespace-nowrap"
-                >
-                  {wl.time} • {wl.amountMl}ml
+              {waterLogs.length === 0 ? (
+                <span className="text-[11px] text-[var(--text-muted)] italic">
+                  No water logged today. Click a preset above to record hydration.
                 </span>
-              ))}
+              ) : (
+                waterLogs.map(wl => (
+                  <span
+                    key={wl.id}
+                    className="px-2 py-0.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] whitespace-nowrap"
+                  >
+                    {wl.time} • {wl.amountMl}ml
+                  </span>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -240,31 +242,41 @@ export default function MealsAndWaterPage() {
           <Badge variant="outline">{meals.length} Meals Logged</Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {meals.map(meal => (
-            <Card key={meal.id} className="p-5 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                    <Utensils className="w-4 h-4" />
+        {meals.length === 0 ? (
+          <Card className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+            <Utensils className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
+            <h4 className="text-base font-semibold text-[var(--text-primary)]">No meals logged today</h4>
+            <p className="text-xs text-[var(--text-muted)] max-w-sm">
+              Track your breakfast, lunch, dinner, or snacks to ensure mindful nutrition throughout your day.
+            </p>
+            <Button size="sm" onClick={() => setMealModalOpen(true)}>Log Your First Meal</Button>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {meals.map(meal => (
+              <Card key={meal.id} className="p-5 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                      <Utensils className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm capitalize text-[var(--text-primary)]">
+                        {meal.type}
+                      </h4>
+                      <span className="text-xs text-[var(--text-muted)]">{meal.time}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-sm capitalize text-[var(--text-primary)]">
-                      {meal.type}
-                    </h4>
-                    <span className="text-xs text-[var(--text-muted)]">{meal.time}</span>
-                  </div>
-                </div>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => deleteMeal(meal.id)}
-                  className="h-7 w-7 p-0 text-rose-400 hover:text-rose-500"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteMeal(meal.id)}
+                    className="h-7 w-7 p-0 text-rose-400 hover:text-rose-500"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
 
               {/* Food items pills */}
               <div className="flex flex-wrap gap-1.5 pt-1">
@@ -286,7 +298,8 @@ export default function MealsAndWaterPage() {
             </Card>
           ))}
         </div>
-      </div>
+      )}
+    </div>
 
       {/* Modal: Log Meal */}
       <Modal

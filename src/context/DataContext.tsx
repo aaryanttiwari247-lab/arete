@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import {
   UserProfile,
   TrackingPreferences,
@@ -109,52 +109,27 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
+  // States with direct lazy initialization
+  const [userProfile, setUserProfile] = useState<UserProfile>(StorageService.getUserProfile);
+  const [trackingPrefs, setTrackingPrefs] = useState<TrackingPreferences>(StorageService.getTrackingPreferences);
+  const [sleepConfig, setSleepConfig] = useState<SleepScheduleConfig>(StorageService.getSleepConfig);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => StorageService.getAuthSession().isAuthenticated);
 
-  // States
-  const [userProfile, setUserProfile] = useState<UserProfile>(StorageService.getUserProfile());
-  const [trackingPrefs, setTrackingPrefs] = useState<TrackingPreferences>(StorageService.getTrackingPreferences());
-  const [sleepConfig, setSleepConfig] = useState<SleepScheduleConfig>(StorageService.getSleepConfig());
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [routineItems, setRoutineItems] = useState<RoutineItem[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
-  const [workoutSessions, setWorkoutSessions] = useState<WorkoutSession[]>([]);
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [waterLogs, setWaterLogs] = useState<WaterLog[]>([]);
-  const [waterTarget, setWaterTargetState] = useState<number>(2500);
-  const [sleepRecords, setSleepRecords] = useState<SleepRecord[]>([]);
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [dailyReviews, setDailyReviews] = useState<DailyReview[]>([]);
-  const [weeklyReview, setWeeklyReview] = useState<WeeklyReview>(StorageService.getWeeklyReview());
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-
-  useEffect(() => {
-    setMounted(true);
-    setUserProfile(StorageService.getUserProfile());
-    setTrackingPrefs(StorageService.getTrackingPreferences());
-    setSleepConfig(StorageService.getSleepConfig());
-    setIsAuthenticated(StorageService.getAuthSession().isAuthenticated);
-    setActivities(StorageService.getActivities());
-    setRoutineItems(StorageService.getRoutineItems());
-    setSubjects(StorageService.getSubjects());
-    setStudySessions(StorageService.getStudySessions());
-    setWorkoutSessions(StorageService.getWorkoutSessions());
-    setMeals(StorageService.getMeals());
-    setWaterLogs(StorageService.getWaterLogs());
-    setWaterTargetState(StorageService.getWaterTarget());
-    setSleepRecords(StorageService.getSleepRecords());
-    setHabits(StorageService.getHabits());
-    setGoals(StorageService.getGoals());
-    setDailyReviews(StorageService.getDailyReviews());
-    setWeeklyReview(StorageService.getWeeklyReview());
-    setNotifications(StorageService.getNotifications());
-    setJournalEntries(StorageService.getJournalEntries());
-  }, []);
+  const [activities, setActivities] = useState<Activity[]>(StorageService.getActivities);
+  const [routineItems, setRoutineItems] = useState<RoutineItem[]>(StorageService.getRoutineItems);
+  const [subjects, setSubjects] = useState<Subject[]>(StorageService.getSubjects);
+  const [studySessions, setStudySessions] = useState<StudySession[]>(StorageService.getStudySessions);
+  const [workoutSessions, setWorkoutSessions] = useState<WorkoutSession[]>(StorageService.getWorkoutSessions);
+  const [meals, setMeals] = useState<Meal[]>(StorageService.getMeals);
+  const [waterLogs, setWaterLogs] = useState<WaterLog[]>(StorageService.getWaterLogs);
+  const [waterTarget, setWaterTargetState] = useState<number>(StorageService.getWaterTarget);
+  const [sleepRecords, setSleepRecords] = useState<SleepRecord[]>(StorageService.getSleepRecords);
+  const [habits, setHabits] = useState<Habit[]>(StorageService.getHabits);
+  const [goals, setGoals] = useState<Goal[]>(StorageService.getGoals);
+  const [dailyReviews, setDailyReviews] = useState<DailyReview[]>(StorageService.getDailyReviews);
+  const [weeklyReview, setWeeklyReview] = useState<WeeklyReview>(StorageService.getWeeklyReview);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(StorageService.getNotifications);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(StorageService.getJournalEntries);
 
   // Sync helpers
   const updateUserProfile = (patch: Partial<UserProfile>) => {
@@ -181,25 +156,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const login = (email: string) => {
+  const login = useCallback((email: string) => {
     setIsAuthenticated(true);
-    StorageService.saveAuthSession({ isAuthenticated: true, user: userProfile });
+    setUserProfile(prev => {
+      const updated = { ...prev, email: email || prev.email };
+      StorageService.saveUserProfile(updated);
+      StorageService.saveAuthSession({ isAuthenticated: true, user: updated });
+      return updated;
+    });
     return true;
-  };
+  }, []);
 
-  const register = (name: string, email: string) => {
-    const updated = { ...userProfile, name, email };
-    setUserProfile(updated);
-    setIsAuthenticated(true);
-    StorageService.saveUserProfile(updated);
-    StorageService.saveAuthSession({ isAuthenticated: true, user: updated });
+  const register = useCallback((name: string, email: string) => {
+    setUserProfile(prev => {
+      const updated = { ...prev, name, email };
+      setIsAuthenticated(true);
+      StorageService.saveUserProfile(updated);
+      StorageService.saveAuthSession({ isAuthenticated: true, user: updated });
+      return updated;
+    });
     return true;
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setIsAuthenticated(false);
     StorageService.saveAuthSession({ isAuthenticated: false, user: null });
-  };
+  }, []);
 
   // Activity Actions
   const addActivity = (act: Omit<Activity, 'id'>): Activity => {
@@ -357,10 +339,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     StorageService.saveWaterTarget(target);
   };
 
-  const today = new Date().toISOString().split('T')[0];
-  const totalWaterToday = waterLogs
-    .filter(l => l.date === today)
-    .reduce((acc, curr) => acc + curr.amountMl, 0);
+  const totalWaterToday = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return waterLogs
+      .filter(l => l.date === today)
+      .reduce((acc, curr) => acc + curr.amountMl, 0);
+  }, [waterLogs]);
 
   // Sleep
   const addSleepRecord = (record: Omit<SleepRecord, 'id'>): SleepRecord => {
@@ -499,63 +483,87 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setJournalEntries(StorageService.getJournalEntries());
   };
 
+  const contextValue = useMemo<DataContextType>(() => ({
+    userProfile,
+    updateUserProfile,
+    trackingPrefs,
+    updateTrackingPrefs,
+    sleepConfig,
+    updateSleepConfig,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    activities,
+    addActivity,
+    updateActivity,
+    deleteActivity,
+    completeActivity,
+    rescheduleActivity,
+    skipActivity,
+    routineItems,
+    addRoutineItem,
+    updateRoutineItem,
+    deleteRoutineItem,
+    subjects,
+    addSubject,
+    studySessions,
+    addStudySession,
+    workoutSessions,
+    addWorkoutSession,
+    meals,
+    addMeal,
+    deleteMeal,
+    waterLogs,
+    waterTarget,
+    addWaterLog,
+    setWaterTarget,
+    totalWaterToday,
+    sleepRecords,
+    addSleepRecord,
+    habits,
+    toggleHabitToday,
+    addHabit,
+    goals,
+    toggleGoalMilestone,
+    addGoal,
+    dailyReviews,
+    saveDailyReview,
+    weeklyReview,
+    notifications,
+    markNotificationRead,
+    clearAllNotifications,
+    journalEntries,
+    addJournalEntry,
+    resetAllData,
+  }), [
+    userProfile,
+    trackingPrefs,
+    sleepConfig,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    activities,
+    routineItems,
+    subjects,
+    studySessions,
+    workoutSessions,
+    meals,
+    waterLogs,
+    waterTarget,
+    totalWaterToday,
+    sleepRecords,
+    habits,
+    goals,
+    dailyReviews,
+    weeklyReview,
+    notifications,
+    journalEntries,
+  ]);
+
   return (
-    <DataContext.Provider
-      value={{
-        userProfile,
-        updateUserProfile,
-        trackingPrefs,
-        updateTrackingPrefs,
-        sleepConfig,
-        updateSleepConfig,
-        isAuthenticated,
-        login,
-        register,
-        logout,
-        activities,
-        addActivity,
-        updateActivity,
-        deleteActivity,
-        completeActivity,
-        rescheduleActivity,
-        skipActivity,
-        routineItems,
-        addRoutineItem,
-        updateRoutineItem,
-        deleteRoutineItem,
-        subjects,
-        addSubject,
-        studySessions,
-        addStudySession,
-        workoutSessions,
-        addWorkoutSession,
-        meals,
-        addMeal,
-        deleteMeal,
-        waterLogs,
-        waterTarget,
-        addWaterLog,
-        setWaterTarget,
-        totalWaterToday,
-        sleepRecords,
-        addSleepRecord,
-        habits,
-        toggleHabitToday,
-        addHabit,
-        goals,
-        toggleGoalMilestone,
-        addGoal,
-        dailyReviews,
-        saveDailyReview,
-        weeklyReview,
-        notifications,
-        markNotificationRead,
-        clearAllNotifications,
-        journalEntries,
-        addJournalEntry,
-        resetAllData,
-      }}
-    >
+    <DataContext.Provider value={contextValue}>
       {children}
     </DataContext.Provider>
   );

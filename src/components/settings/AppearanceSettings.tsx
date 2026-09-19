@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/
 import { Button } from '@/ui/Button';
 import { Badge } from '@/ui/Badge';
 import { Sun, Moon, CloudMoon, Sparkles, Sliders, Eye, RotateCcw } from 'lucide-react';
-import { ThemeMode, AnimationIntensity } from '@/types/theme';
+import { AnimationIntensity } from '@/types/theme';
 
 export const AppearanceSettings: React.FC = () => {
   const {
@@ -28,7 +28,7 @@ export const AppearanceSettings: React.FC = () => {
           Appearance & Theme System
         </h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Customize DayTrack's visual atmosphere, background motion, and contrast. All preferences persist automatically.
+          Customize DayTrack&apos;s visual atmosphere, background motion, and contrast. All preferences persist automatically.
         </p>
       </div>
 
@@ -173,9 +173,9 @@ export const AppearanceSettings: React.FC = () => {
       {/* 2. BACKGROUND ANIMATION TOGGLE */}
       <Card>
         <CardHeader>
-          <CardTitle>Background Animation</CardTitle>
+          <CardTitle>Background Animation (Sand Clock)</CardTitle>
           <CardDescription>
-            GPU-accelerated ambient gradients and subtle particles that float gently behind all interface cards.
+            Animated glass hourglass showing how time flies, with trickling sand streams, accumulating mounds, and floating stardust.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -194,7 +194,7 @@ export const AppearanceSettings: React.FC = () => {
             >
               <div>
                 <p className="text-sm font-semibold text-[var(--text-primary)]">Off</p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">Static clean background with zero movement</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">Static background with subtle contours</p>
               </div>
               <span
                 className={`w-4 h-4 rounded-full border flex items-center justify-center ${
@@ -224,7 +224,7 @@ export const AppearanceSettings: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
                   <span>On (Recommended)</span>
                 </p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">Smooth, slow moving ambient gradient mesh</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">Sand clock with flowing grains and floating time particles</p>
               </div>
               <span
                 className={`w-4 h-4 rounded-full border flex items-center justify-center ${

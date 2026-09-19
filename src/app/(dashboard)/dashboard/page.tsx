@@ -1,18 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { DashboardQuickStats } from '@/components/dashboard/StatCard';
 import { ActivityTimeline } from '@/components/dashboard/ActivityTimeline';
-import { Button } from '@/ui/Button';
-import { Timer, ArrowRight, BookOpen, PenLine, Sparkles, Flame } from 'lucide-react';
+import { Timer, ArrowRight, PenLine, Flame } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 
 export default function DashboardPage() {
   const { habits } = useData();
 
-  const activeHabitsStreak = habits.reduce((max, h) => Math.max(max, h.currentStreak), 0);
+  const activeHabitsStreak = useMemo(() => {
+    return habits.reduce((max, h) => Math.max(max, h.currentStreak), 0);
+  }, [habits]);
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn">

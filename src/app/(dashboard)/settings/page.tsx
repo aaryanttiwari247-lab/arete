@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const handleResetData = () => {
     resetAllData();
     setResetConfirm(false);
-    alert('All application data has been successfully reset to default demo records.');
+    alert('All tracker data has been cleared successfully.');
   };
 
   const handleExportData = () => {
@@ -191,16 +191,16 @@ export default function SettingsPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[var(--border-subtle)]">
                 <div>
                   <h4 className="text-sm font-semibold text-rose-400">
-                    Reset to Default Demo Records
+                    Clear All Tracker Data
                   </h4>
                   <p className="text-xs text-[var(--text-muted)]">
-                    Clears local modifications and re-seeds the application with the Alex Morgan demo profile.
+                    Clears all your logged activities, workouts, study sessions, and resets all trackers to a clean state.
                   </p>
                 </div>
                 {resetConfirm ? (
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="danger" onClick={handleResetData}>
-                      Confirm Reset
+                      Confirm Clear
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => setResetConfirm(false)}>
                       Cancel
@@ -209,7 +209,7 @@ export default function SettingsPage() {
                 ) : (
                   <Button size="sm" variant="outline" onClick={() => setResetConfirm(true)} className="gap-2 text-rose-400">
                     <RotateCcw className="w-4 h-4" />
-                    <span>Reset Data</span>
+                    <span>Clear Data</span>
                   </Button>
                 )}
               </div>

@@ -15,8 +15,6 @@ import {
   Calendar,
   CheckCircle2,
   Circle,
-  Clock,
-  Sparkles,
   Trophy,
 } from 'lucide-react';
 
@@ -29,9 +27,7 @@ export default function GoalsPage() {
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('2026-12-31');
   const [category, setCategory] = useState('Engineering & Career');
-  const [milestonesText, setMilestonesText] = useState(
-    'HTML/CSS Fundamentals, JavaScript Deep Dive, Next.js App Router, PostgreSQL Schema, Production Deploy'
-  );
+  const [milestonesText, setMilestonesText] = useState('');
 
   const avgProgress = Math.round(
     goals.reduce((acc, g) => acc + g.progress, 0) / (goals.length || 1)
@@ -137,7 +133,17 @@ export default function GoalsPage() {
 
       {/* GOALS CARDS */}
       <div className="space-y-6">
-        {goals.map(goal => (
+        {goals.length === 0 ? (
+          <Card className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+            <Target className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
+            <h4 className="text-base font-semibold text-[var(--text-primary)]">No goals configured yet</h4>
+            <p className="text-xs text-[var(--text-muted)] max-w-sm">
+              Define your high-level objectives and progressive milestones across career, wellness, skills, and personal milestones.
+            </p>
+            <Button size="sm" onClick={() => setModalOpen(true)}>Create Your First Goal</Button>
+          </Card>
+        ) : (
+          goals.map(goal => (
           <Card key={goal.id} className="p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-[var(--border-subtle)]">
               <div className="space-y-1 flex-1">
@@ -203,7 +209,7 @@ export default function GoalsPage() {
               </div>
             </div>
           </Card>
-        ))}
+        )))}
       </div>
 
       {/* Modal: New Goal */}

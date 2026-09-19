@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
+import { Card } from '@/ui/Card';
 import { Button } from '@/ui/Button';
 import { Input } from '@/ui/Input';
 import { Select } from '@/ui/Select';
@@ -10,12 +10,9 @@ import { Badge } from '@/ui/Badge';
 import {
   User,
   Mail,
-  Calendar,
-  Clock,
   CheckCircle2,
   ShieldCheck,
   Camera,
-  Activity,
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -23,11 +20,11 @@ export default function ProfilePage() {
 
   const [name, setName] = useState(userProfile.name);
   const [email, setEmail] = useState(userProfile.email);
-  const [age, setAge] = useState(userProfile.age?.toString() || '26');
-  const [height, setHeight] = useState(userProfile.height?.toString() || '178');
-  const [weight, setWeight] = useState(userProfile.weight?.toString() || '72');
-  const [gender, setGender] = useState(userProfile.gender || 'Non-binary');
-  const [timezone, setTimezone] = useState(userProfile.timezone || 'America/New_York (EST)');
+  const [age, setAge] = useState(userProfile.age?.toString() || '');
+  const [height, setHeight] = useState(userProfile.height?.toString() || '');
+  const [weight, setWeight] = useState(userProfile.weight?.toString() || '');
+  const [gender, setGender] = useState(userProfile.gender || 'Prefer not to say');
+  const [timezone, setTimezone] = useState(userProfile.timezone || 'Asia/Kolkata (IST)');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -65,7 +62,7 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-[var(--border-subtle)] text-center sm:text-left">
             <div className="relative group">
               <div className="w-24 h-24 rounded-2xl bg-[var(--accent-primary)]/20 border-2 border-[var(--accent-primary)] text-[var(--accent-primary)] flex items-center justify-center font-bold text-3xl shadow-md">
-                {name.charAt(0)}
+                {(name || 'U').charAt(0).toUpperCase()}
               </div>
               <button
                 type="button"
@@ -78,10 +75,10 @@ export default function ProfilePage() {
 
             <div className="space-y-1 flex-1">
               <div className="flex items-center justify-center sm:justify-start gap-2">
-                <h3 className="text-xl font-bold text-[var(--text-primary)]">{name}</h3>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">{name || 'Your Profile'}</h3>
                 <Badge variant="success" size="sm">Active Member</Badge>
               </div>
-              <p className="text-xs text-[var(--text-muted)]">{email}</p>
+              <p className="text-xs text-[var(--text-muted)]">{email || 'No email configured'}</p>
               <p className="text-xs text-[var(--text-muted)] font-mono pt-1">
                 Account created: {new Date(userProfile.createdAt).toLocaleDateString()}
               </p>

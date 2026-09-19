@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
+import { Card } from '@/ui/Card';
 import { Button } from '@/ui/Button';
-import { Badge } from '@/ui/Badge';
 import { Modal } from '@/ui/Modal';
 import { Input } from '@/ui/Input';
-import { BookMarked, Plus, Calendar, Tag, Sparkles } from 'lucide-react';
+import { BookMarked, Plus, Calendar, Tag } from 'lucide-react';
 
 export default function JournalPage() {
   const { journalEntries, addJournalEntry } = useData();
@@ -15,7 +14,7 @@ export default function JournalPage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [tagsInput, setTagsInput] = useState('Mindset, Productivity');
+  const [tagsInput, setTagsInput] = useState('');
 
   const handleCreateEntry = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,37 +58,51 @@ export default function JournalPage() {
 
       {/* ENTRIES LIST */}
       <div className="space-y-4">
-        {journalEntries.map(entry => (
-          <Card key={entry.id} className="p-6 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)]">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">{entry.title}</h3>
-              <span className="text-xs text-[var(--text-muted)] font-mono flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                {entry.date}
-              </span>
-            </div>
-
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
-              {entry.content}
+        {journalEntries.length === 0 ? (
+          <Card className="p-10 text-center flex flex-col items-center justify-center">
+            <BookMarked className="w-12 h-12 text-[var(--text-muted)] opacity-50 mb-3" />
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">No journal entries yet</h3>
+            <p className="text-xs text-[var(--text-muted)] mt-1 max-w-sm mb-4">
+              Capture your insights, daily reflections, and thoughts here. All entries stay organized and private.
             </p>
-
-            {entry.tags.length > 0 && (
-              <div className="flex items-center gap-2 pt-2">
-                <Tag className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                <div className="flex flex-wrap gap-1.5">
-                  {entry.tags.map((t, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] text-[var(--text-muted)]"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            <Button size="sm" onClick={() => setModalOpen(true)} className="gap-1.5">
+              <Plus className="w-3.5 h-3.5" />
+              <span>Write First Entry</span>
+            </Button>
           </Card>
-        ))}
+        ) : (
+          journalEntries.map(entry => (
+            <Card key={entry.id} className="p-6 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--border-subtle)]">
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">{entry.title}</h3>
+                <span className="text-xs text-[var(--text-muted)] font-mono flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {entry.date}
+                </span>
+              </div>
+
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
+                {entry.content}
+              </p>
+
+              {entry.tags.length > 0 && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Tag className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                  <div className="flex flex-wrap gap-1.5">
+                    {entry.tags.map((t, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] text-[var(--text-muted)]"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Modal: New Journal Entry */}

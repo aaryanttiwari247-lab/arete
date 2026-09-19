@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/ui/Card';
 import { useData } from '@/context/DataContext';
 import { BookOpen, Dumbbell, Moon, Droplets, Utensils, CheckSquare } from 'lucide-react';
@@ -46,42 +46,79 @@ const QuickStatItem: React.FC<QuickStatItemProps> = ({
 export const DashboardQuickStats: React.FC = () => {
   const { studySessions, workoutSessions, sleepRecords, totalWaterToday, waterTarget, meals, activities } = useData();
 
-  // Calculate today's study minutes
-  const today = new Date().toISOString().split('T')[0];
-  const todayStudyMinutes = studySessions
-    .filter(s => s.date === today)
-    .reduce((acc, s) => acc + s.durationMinutes, 0);
-  const studyHours = Math.floor(todayStudyMinutes / 60);
-  const studyMins = todayStudyMinutes % 60;
-  const studyFormatted = studyHours > 0 ? `${studyHours}h ${studyMins}m` : `${studyMins}m`;
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayStudyMinutes = studySessions
+      .filter(s => s.date === today)
+      .reduce((acc, s) => acc + s.durationMinutes, 0);
+    const studyHours = Math.floor(todayStudyMinutes / 60);
+    const studyMins = todayStudyMinutes % 60;
+    const studyFormatted = todayStudyMinutes > 0
+      ? (studyHours > 0 ? `${studyHours}h ${studyMins}m` : `${studyMins}m`)
+      : '0m';
+    const studySubtext = todayStudyMinutes > 0 ? 'Active today' : 'No study logged';
 
-  // Workout duration
-  const todayWorkout = workoutSessions.find(w => w.date === today);
-  const workoutFormatted = todayWorkout ? `${todayWorkout.durationMinutes} min` : '0 min';
+    const todayWorkout = workoutSessions.find(w => w.date === today);
+    const workoutFormatted = todayWorkout ? `${todayWorkout.durationMinutes} min` : '0 min';
+    const workoutSubtext = todayWorkout ? todayWorkout.title : 'No workout today';
 
-  // Sleep
-  const latestSleep = sleepRecords[0];
-  const sleepHours = latestSleep ? Math.floor(latestSleep.durationMinutes / 60) : 7;
-  const sleepMins = latestSleep ? latestSleep.durationMinutes % 60 : 55;
-  const sleepFormatted = `${sleepHours}h ${sleepMins}m`;
+    const latestSleep = sleepRecords[0];
+    const sleepFormatted = latestSleep
+      ? `${Math.floor(latestSleep.durationMinutes / 60)}h ${latestSleep.durationMinutes % 60}m`
+      : '0h 0m';
+    const sleepSubtext = latestSleep ? `Quality ${latestSleep.quality}/5` : 'No sleep logged';
 
-  // Water
-  const waterLiters = (totalWaterToday / 1000).toFixed(2);
-  const targetLiters = (waterTarget / 1000).toFixed(1);
+    const waterLiters = (totalWaterToday / 1000).toFixed(2);
+    const targetLiters = (waterTarget / 1000).toFixed(1);
 
-  // Meals
-  const todayMealsCount = meals.filter(m => m.date === today).length;
+    const todayMealsCount = meals.filter(m => m.date === today).length;
+    const mealSubtext = todayMealsCount > 0 ? `${todayMealsCount} recorded` : 'No meals logged';
 
-  // Completed Tasks
-  const completedTasks = activities.filter(a => a.status === 'completed').length;
-  const totalTasks = activities.length;
+    const completedTasks = activities.filter(a => a.status === 'completed').length;
+    const totalTasks = activities.length;
+    const taskSubtext = totalTasks > 0
+      ? (completedTasks === totalTasks ? 'All completed' : `${totalTasks - completedTasks} remaining`)
+      : 'No tasks scheduled';
+
+    return {
+      studyFormatted,
+      studySubtext,
+      workoutFormatted,
+      workoutSubtext,
+      sleepFormatted,
+      sleepSubtext,
+      waterLiters,
+      targetLiters,
+      todayMealsCount,
+      mealSubtext,
+      completedTasks,
+      totalTasks,
+      taskSubtext,
+    };
+  }, [studySessions, workoutSessions, sleepRecords, totalWaterToday, waterTarget, meals, activities]);
+
+  const {
+    studyFormatted,
+    studySubtext,
+    workoutFormatted,
+    workoutSubtext,
+    sleepFormatted,
+    sleepSubtext,
+    waterLiters,
+    targetLiters,
+    todayMealsCount,
+    mealSubtext,
+    completedTasks,
+    totalTasks,
+    taskSubtext,
+  } = stats;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
       <QuickStatItem
         label="Study Time"
         value={studyFormatted}
-        subtext="Target: 3h 30m"
+        subtext={studySubtext}
         icon={<BookOpen className="w-4 h-4" />}
         accentColor="#38bdf8"
       />
@@ -89,7 +126,7 @@ export const DashboardQuickStats: React.FC = () => {
       <QuickStatItem
         label="Workout"
         value={workoutFormatted}
-        subtext="Upper body push"
+        subtext={workoutSubtext}
         icon={<Dumbbell className="w-4 h-4" />}
         accentColor="#f97316"
       />
@@ -97,7 +134,7 @@ export const DashboardQuickStats: React.FC = () => {
       <QuickStatItem
         label="Sleep"
         value={sleepFormatted}
-        subtext="Restorative 92%"
+        subtext={sleepSubtext}
         icon={<Moon className="w-4 h-4" />}
         accentColor="#818cf8"
       />
@@ -112,8 +149,8 @@ export const DashboardQuickStats: React.FC = () => {
 
       <QuickStatItem
         label="Meals Logged"
-        value={`${todayMealsCount} / 3`}
-        subtext="Clean whole foods"
+        value={`${todayMealsCount}`}
+        subtext={mealSubtext}
         icon={<Utensils className="w-4 h-4" />}
         accentColor="#10b981"
       />
@@ -121,7 +158,7 @@ export const DashboardQuickStats: React.FC = () => {
       <QuickStatItem
         label="Tasks Done"
         value={`${completedTasks} / ${totalTasks}`}
-        subtext="On track today"
+        subtext={taskSubtext}
         icon={<CheckSquare className="w-4 h-4" />}
         accentColor="#a855f7"
       />

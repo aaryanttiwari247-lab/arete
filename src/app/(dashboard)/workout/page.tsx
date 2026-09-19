@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import { WorkoutSession, WorkoutExercise, ExerciseSet } from '@/types/models';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
@@ -12,13 +12,10 @@ import { Tabs } from '@/ui/Tabs';
 import {
   Dumbbell,
   Plus,
-  Clock,
-  CheckCircle2,
-  Calendar,
-  Flame,
   Trash2,
-  Sliders,
-  ChevronRight,
+  Clock,
+  Flame,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function WorkoutPage() {
@@ -28,21 +25,13 @@ export default function WorkoutPage() {
 
   // Form states
   const [title, setTitle] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('50');
+  const [durationMinutes, setDurationMinutes] = useState('45');
   const [notes, setNotes] = useState('');
-  const [exercises, setExercises] = useState<WorkoutExercise[]>([
-    {
-      id: 'ex_1',
-      name: 'Barbell Bench Press',
-      sets: [
-        { setNumber: 1, reps: 10, weightKg: 60, completed: true },
-        { setNumber: 2, reps: 8, weightKg: 70, completed: true },
-        { setNumber: 3, reps: 6, weightKg: 75, completed: true },
-      ],
-    },
-  ]);
+  const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
 
-  const totalWorkoutMinutes = workoutSessions.reduce((acc, w) => acc + w.durationMinutes, 0);
+  const totalWorkoutMinutes = useMemo(() => {
+    return workoutSessions.reduce((acc, w) => acc + w.durationMinutes, 0);
+  }, [workoutSessions]);
 
   const handleAddExercise = () => {
     const newEx: WorkoutExercise = {
@@ -79,7 +68,7 @@ export default function WorkoutPage() {
     exerciseId: string,
     setIndex: number,
     field: keyof ExerciseSet,
-    val: any
+    val: string | number | boolean | undefined
   ) => {
     setExercises(prev =>
       prev.map(ex => {
@@ -175,11 +164,12 @@ export default function WorkoutPage() {
             <Flame className="w-4 h-4 text-orange-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">5 / 5 Days</span>
-            <span className="text-xs text-emerald-400 font-medium">Target Met</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">
+              {workoutSessions.length} Sessions
+            </span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            Splits: Push, Pull, Legs & Mobility
+            {workoutSessions.length > 0 ? 'Consistent training recorded' : 'Log workouts to build fitness routines'}
           </p>
         </Card>
       </div>
@@ -188,74 +178,85 @@ export default function WorkoutPage() {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-[var(--text-primary)]">Workout History</h3>
 
-        <div className="space-y-4">
-          {workoutSessions.map(session => (
-            <Card key={session.id} className="p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--border-subtle)]">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400">
-                    <Dumbbell className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-base text-[var(--text-primary)]">
-                      {session.title}
-                    </h4>
-                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mt-0.5">
-                      <span>{session.date}</span>
-                      <span>•</span>
-                      <span>{session.durationMinutes} min</span>
-                      <span>•</span>
-                      <Badge variant={session.type === 'advanced' ? 'info' : 'outline'} size="sm">
-                        {session.type}
-                      </Badge>
+        {workoutSessions.length === 0 ? (
+          <Card className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+            <Dumbbell className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
+            <h4 className="text-base font-semibold text-[var(--text-primary)]">No workouts logged yet</h4>
+            <p className="text-xs text-[var(--text-muted)] max-w-sm">
+              Log your training sessions, split routines, sets, and weights to measure progressive overload.
+            </p>
+            <Button size="sm" onClick={() => setLogModalOpen(true)}>Log Your First Workout</Button>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {workoutSessions.map(session => (
+              <Card key={session.id} className="p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--border-subtle)]">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400">
+                      <Dumbbell className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-base text-[var(--text-primary)]">
+                        {session.title}
+                      </h4>
+                      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mt-0.5">
+                        <span>{session.date}</span>
+                        <span>•</span>
+                        <span>{session.durationMinutes} min</span>
+                        <span>•</span>
+                        <Badge variant={session.type === 'advanced' ? 'info' : 'outline'} size="sm">
+                          {session.type}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1.5 self-start sm:self-center text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Completed</span>
-                </div>
-              </div>
-
-              {session.notes && (
-                <p className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed">
-                  {session.notes}
-                </p>
-              )}
-
-              {/* Advanced Sets breakdown if present */}
-              {session.exercises && session.exercises.length > 0 && (
-                <div className="mt-4 space-y-3 pt-3 border-t border-[var(--border-subtle)]">
-                  <h5 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                    Exercises & Sets Recorded
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {session.exercises.map(ex => (
-                      <div
-                        key={ex.id}
-                        className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] text-xs space-y-2"
-                      >
-                        <div className="font-semibold text-[var(--text-primary)]">{ex.name}</div>
-                        <div className="space-y-1">
-                          {ex.sets.map(s => (
-                            <div
-                              key={s.setNumber}
-                              className="flex items-center justify-between text-[var(--text-muted)] font-mono"
-                            >
-                              <span>Set {s.setNumber}: {s.reps} reps</span>
-                              {s.weightKg && <span>{s.weightKg} kg</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-1.5 self-start sm:self-center text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Completed</span>
                   </div>
                 </div>
-              )}
-            </Card>
-          ))}
-        </div>
+
+                {session.notes && (
+                  <p className="text-xs text-[var(--text-secondary)] mt-3 leading-relaxed">
+                    {session.notes}
+                  </p>
+                )}
+
+                {/* Advanced Sets breakdown if present */}
+                {session.exercises && session.exercises.length > 0 && (
+                  <div className="mt-4 space-y-3 pt-3 border-t border-[var(--border-subtle)]">
+                    <h5 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                      Exercises & Sets Recorded
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {session.exercises.map(ex => (
+                        <div
+                          key={ex.id}
+                          className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] text-xs space-y-2"
+                        >
+                          <div className="font-semibold text-[var(--text-primary)]">{ex.name}</div>
+                          <div className="space-y-1">
+                            {ex.sets.map(s => (
+                              <div
+                                key={s.setNumber}
+                                className="flex items-center justify-between text-[var(--text-muted)] font-mono"
+                              >
+                                <span>Set {s.setNumber}: {s.reps} reps</span>
+                                {s.weightKg && <span>{s.weightKg} kg</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modal: Log Workout */}
@@ -268,7 +269,7 @@ export default function WorkoutPage() {
         <form onSubmit={handleSaveWorkout} className="space-y-4">
           <Tabs
             activeTab={activeTrackingMode}
-            onChange={t => setActiveTrackingMode(t as any)}
+            onChange={t => setActiveTrackingMode(t as 'simple' | 'advanced')}
             tabs={[
               { id: 'simple', label: 'Simple Mode (Fast)' },
               { id: 'advanced', label: 'Advanced Mode (Sets & Reps)' },

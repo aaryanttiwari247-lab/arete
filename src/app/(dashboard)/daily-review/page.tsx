@@ -12,8 +12,6 @@ import {
   Activity,
   CheckCircle2,
   Calendar,
-  Sparkles,
-  ArrowRight,
 } from 'lucide-react';
 
 export default function DailyReviewPage() {
@@ -212,38 +210,48 @@ export default function DailyReviewPage() {
         <h3 className="text-lg font-semibold text-[var(--text-primary)]">Past Reflections</h3>
 
         <div className="space-y-4">
-          {dailyReviews.map(review => (
-            <Card key={review.id} className="p-5 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[var(--accent-primary)]" />
-                  <span className="text-xs font-bold text-[var(--text-primary)] font-mono">
-                    {review.date}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <Badge variant="info" size="sm">Mood: {review.mood}/5</Badge>
-                  <Badge variant="success" size="sm">Energy: {review.energy}/5</Badge>
-                  <Badge variant="outline" size="sm">Stress: {review.stress}/5</Badge>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
-                <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] space-y-1">
-                  <span className="font-semibold text-emerald-400 block">Went Well:</span>
-                  <p className="text-[var(--text-secondary)] leading-relaxed">{review.wentWell}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] space-y-1">
-                  <span className="font-semibold text-amber-400 block">Could Improve:</span>
-                  <p className="text-[var(--text-secondary)] leading-relaxed">{review.couldImprove}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] space-y-1">
-                  <span className="font-semibold text-sky-400 block">Tomorrow Focus:</span>
-                  <p className="text-[var(--text-secondary)] leading-relaxed">{review.tomorrowFocus}</p>
-                </div>
-              </div>
+          {dailyReviews.length === 0 ? (
+            <Card className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+              <Calendar className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
+              <h4 className="text-base font-semibold text-[var(--text-primary)]">No reflections recorded yet</h4>
+              <p className="text-xs text-[var(--text-muted)] max-w-sm">
+                Complete your first end-of-day reflection above to record energy levels, wins, and tomorrow's focus.
+              </p>
             </Card>
-          ))}
+          ) : (
+            dailyReviews.map(review => (
+              <Card key={review.id} className="p-5 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span className="text-xs font-bold text-[var(--text-primary)] font-mono">
+                      {review.date}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Badge variant="info" size="sm">Mood: {review.mood}/5</Badge>
+                    <Badge variant="success" size="sm">Energy: {review.energy}/5</Badge>
+                    <Badge variant="outline" size="sm">Stress: {review.stress}/5</Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
+                  <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] space-y-1">
+                    <span className="font-semibold text-emerald-400 block">Went Well:</span>
+                    <p className="text-[var(--text-secondary)] leading-relaxed">{review.wentWell}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] space-y-1">
+                    <span className="font-semibold text-amber-400 block">Could Improve:</span>
+                    <p className="text-[var(--text-secondary)] leading-relaxed">{review.couldImprove}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[var(--bg-surface-elevated)] space-y-1">
+                    <span className="font-semibold text-sky-400 block">Tomorrow Focus:</span>
+                    <p className="text-[var(--text-secondary)] leading-relaxed">{review.tomorrowFocus}</p>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '@/context/ThemeContext';
 import { useData } from '@/context/DataContext';
-import { Sun, Moon, CloudMoon, Plus, Bell, Sparkles } from 'lucide-react';
+import { Sun, Moon, CloudMoon, Plus, Bell } from 'lucide-react';
 import { Button } from '@/ui/Button';
 import { QuickAddModal } from './QuickAddModal';
 import { NotificationPanel } from './NotificationPanel';
@@ -12,27 +12,27 @@ import { NotificationPanel } from './NotificationPanel';
 export const Header: React.FC = () => {
   const { theme, cycleTheme } = useTheme();
   const { userProfile, notifications } = useData();
-  const [greeting, setGreeting] = useState('Good day');
-  const [currentDateStr, setCurrentDateStr] = useState('');
-  const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  useEffect(() => {
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 17) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  });
 
+  const [currentDateStr] = useState(() => {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long',
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     };
-    setCurrentDateStr(new Date().toLocaleDateString(undefined, options));
-  }, []);
+    return new Date().toLocaleDateString(undefined, options);
+  });
+
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const getThemeIcon = () => {
     if (theme === 'light') return <Sun className="w-4 h-4 text-amber-500" />;
@@ -47,7 +47,7 @@ export const Header: React.FC = () => {
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <h1 className="text-sm sm:text-base font-semibold text-[var(--text-primary)]">
-              {greeting}, {userProfile.name.split(' ')[0]}
+              {greeting}, {userProfile.name ? userProfile.name.split(' ')[0] : 'there'}
             </h1>
             <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-[var(--text-muted)]" />
             <span className="hidden sm:inline-block text-xs text-[var(--text-muted)]">
@@ -105,7 +105,7 @@ export const Header: React.FC = () => {
             className="w-8 h-8 rounded-full bg-[var(--accent-subtle)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] font-bold text-xs flex items-center justify-center hover:ring-2 hover:ring-[var(--accent-ring)] transition-all"
             title="User Profile"
           >
-            {userProfile.name.charAt(0)}
+            {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
           </Link>
         </div>
       </header>

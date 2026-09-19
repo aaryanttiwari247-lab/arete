@@ -3,7 +3,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { CheckCheck, Bell, Info, Award, Calendar } from 'lucide-react';
-import { Button } from '@/ui/Button';
 
 interface NotificationPanelProps {
   onClose: () => void;

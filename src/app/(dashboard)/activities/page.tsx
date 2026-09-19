@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import { Activity, ActivityCategory, ActivityPriority } from '@/types/models';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
@@ -10,14 +10,11 @@ import { Modal } from '@/ui/Modal';
 import { Input } from '@/ui/Input';
 import { Select } from '@/ui/Select';
 import {
-  CheckSquare,
   Plus,
   Search,
   Filter,
-  ArrowUpDown,
   CheckCircle2,
   Circle,
-  Clock,
   Edit2,
   Trash2,
   XCircle,
@@ -55,31 +52,33 @@ export default function ActivitiesPage() {
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
   const [formNotes, setFormNotes] = useState('');
 
-  // Filter & Search Logic
-  const filteredActivities = activities
-    .filter(a => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesTitle = a.title.toLowerCase().includes(q);
-        const matchesNotes = a.notes ? a.notes.toLowerCase().includes(q) : false;
-        if (!matchesTitle && !matchesNotes) return false;
-      }
+  // Filter & Search Logic with useMemo
+  const filteredActivities = useMemo(() => {
+    return activities
+      .filter(a => {
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchesTitle = a.title.toLowerCase().includes(q);
+          const matchesNotes = a.notes ? a.notes.toLowerCase().includes(q) : false;
+          if (!matchesTitle && !matchesNotes) return false;
+        }
 
-      if (statusFilter !== 'all' && a.status !== statusFilter) return false;
-      if (categoryFilter !== 'all' && a.category !== categoryFilter) return false;
-      if (priorityFilter !== 'all' && a.priority !== priorityFilter) return false;
+        if (statusFilter !== 'all' && a.status !== statusFilter) return false;
+        if (categoryFilter !== 'all' && a.category !== categoryFilter) return false;
+        if (priorityFilter !== 'all' && a.priority !== priorityFilter) return false;
 
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'time') return a.startTime.localeCompare(b.startTime);
-      if (sortBy === 'title') return a.title.localeCompare(b.title);
-      if (sortBy === 'priority') {
-        const order = { urgent: 0, high: 1, medium: 2, low: 3 };
-        return order[a.priority] - order[b.priority];
-      }
-      return 0;
-    });
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'time') return a.startTime.localeCompare(b.startTime);
+        if (sortBy === 'title') return a.title.localeCompare(b.title);
+        if (sortBy === 'priority') {
+          const order = { urgent: 0, high: 1, medium: 2, low: 3 };
+          return order[a.priority] - order[b.priority];
+        }
+        return 0;
+      });
+  }, [activities, searchQuery, statusFilter, categoryFilter, priorityFilter, sortBy]);
 
   const getCategoryIcon = (category: ActivityCategory) => {
     switch (category) {

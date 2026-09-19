@@ -2,20 +2,15 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
+import { Card } from '@/ui/Card';
 import { Button } from '@/ui/Button';
 import { Input } from '@/ui/Input';
 import { Select } from '@/ui/Select';
-import { Badge } from '@/ui/Badge';
 import { useData } from '@/context/DataContext';
 import {
   Sparkles,
-  User,
-  ShieldCheck,
   CheckCircle2,
   Moon,
-  Target,
-  Calendar,
   ArrowRight,
   ArrowLeft,
   BookOpen,
@@ -27,6 +22,7 @@ import {
   Smile,
   Heart,
   Briefcase,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function OnboardingPage() {
@@ -45,11 +41,11 @@ export default function OnboardingPage() {
 
   // Step 2: Profile state
   const [name, setName] = useState(userProfile.name);
-  const [age, setAge] = useState(userProfile.age?.toString() || '26');
-  const [height, setHeight] = useState(userProfile.height?.toString() || '178');
-  const [weight, setWeight] = useState(userProfile.weight?.toString() || '72');
-  const [gender, setGender] = useState(userProfile.gender || 'Non-binary');
-  const [timezone, setTimezone] = useState(userProfile.timezone || 'America/New_York (EST)');
+  const [age, setAge] = useState(userProfile.age?.toString() || '');
+  const [height, setHeight] = useState(userProfile.height?.toString() || '');
+  const [weight, setWeight] = useState(userProfile.weight?.toString() || '');
+  const [gender, setGender] = useState(userProfile.gender || 'Prefer not to say');
+  const [timezone, setTimezone] = useState(userProfile.timezone || 'Asia/Kolkata (IST)');
 
   // Step 3: Tracking categories state
   const [prefs, setPrefs] = useState({ ...trackingPrefs });
@@ -59,12 +55,7 @@ export default function OnboardingPage() {
   const [wakeTime, setWakeTime] = useState(sleepConfig.targetWakeTime || '07:00');
 
   // Step 5: Goals state
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([
-    'Study consistently',
-    'Exercise regularly',
-    'Learn coding',
-    'Improve sleep consistency',
-  ]);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
 
   // Step 6: Routine sample options
   const [routinePreset, setRoutinePreset] = useState<'balanced' | 'student' | 'fitness' | 'minimal'>('balanced');
@@ -282,7 +273,7 @@ export default function OnboardingPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
               {trackingOptions.map(opt => {
-                const isChecked = (prefs as any)[opt.key];
+                const isChecked = Boolean(prefs[opt.key as keyof typeof prefs]);
                 return (
                   <div
                     key={opt.key}
@@ -458,7 +449,7 @@ export default function OnboardingPage() {
               ].map(preset => (
                 <div
                   key={preset.id}
-                  onClick={() => setRoutinePreset(preset.id as any)}
+                  onClick={() => setRoutinePreset(preset.id as 'balanced' | 'student' | 'fitness' | 'minimal')}
                   className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     routinePreset === preset.id
                       ? 'border-[var(--accent-primary)] bg-[var(--accent-subtle)]/40 shadow-sm'

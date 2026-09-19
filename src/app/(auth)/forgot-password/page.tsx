@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
             <Input
               label="Email Address"
               type="email"
-              placeholder="alex@example.com"
+              placeholder="you@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               icon={<Mail className="w-4 h-4" />}

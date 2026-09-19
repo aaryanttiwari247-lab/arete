@@ -13,7 +13,7 @@ export const AnimatedBackground: React.FC = () => {
     <div
       aria-hidden="true"
       className="fixed inset-0 pointer-events-none overflow-hidden theme-transition"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 0, contain: 'strict' }}
     >
       {theme === 'light' && <LightBackground />}
       {theme === 'medium' && <MediumBackground />}

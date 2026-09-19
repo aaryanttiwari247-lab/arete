@@ -5,7 +5,7 @@ import { useData } from '@/context/DataContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
 import { Button } from '@/ui/Button';
 import { Badge } from '@/ui/Badge';
-import { Bell, CheckCheck, Award, Calendar, Info, Trash2 } from 'lucide-react';
+import { CheckCheck, Award, Calendar, Info } from 'lucide-react';
 
 export default function NotificationsPage() {
   const { notifications, markNotificationRead, clearAllNotifications } = useData();

@@ -110,7 +110,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({ isOpen, onClose })
       <div className="space-y-5">
         <Tabs
           activeTab={activeTab}
-          onChange={t => setActiveTab(t as any)}
+          onChange={t => setActiveTab(t as 'activity' | 'water' | 'meal' | 'study')}
           tabs={[
             { id: 'activity', label: 'Activity', icon: <CheckSquare className="w-3.5 h-3.5" /> },
             { id: 'water', label: 'Water', icon: <Droplets className="w-3.5 h-3.5" /> },

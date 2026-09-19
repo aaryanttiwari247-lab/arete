@@ -173,14 +173,14 @@ export const Sidebar: React.FC = () => {
         {!collapsed && (
           <div className="pt-2 mt-2 border-t border-[var(--border-subtle)] flex items-center gap-2.5 px-2">
             <div className="w-8 h-8 rounded-full bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] flex items-center justify-center font-bold text-xs">
-              {userProfile.name.charAt(0)}
+              {(userProfile.name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col truncate">
               <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                {userProfile.name}
+                {userProfile.name || 'DayTrack User'}
               </span>
               <span className="text-[10px] text-[var(--text-muted)] truncate">
-                {userProfile.email}
+                {userProfile.email || 'Configure profile'}
               </span>
             </div>
           </div>

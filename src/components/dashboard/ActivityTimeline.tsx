@@ -11,12 +11,9 @@ import { Input } from '@/ui/Input';
 import {
   CheckCircle2,
   Circle,
-  Clock,
-  MoreVertical,
   CalendarClock,
   Edit2,
   Trash2,
-  FastForward,
   BookOpen,
   Dumbbell,
   Utensils,
@@ -26,6 +23,8 @@ import {
   BookMarked,
   UserCheck,
   Sparkles,
+  Clock,
+  FastForward,
 } from 'lucide-react';
 
 export const ActivityTimeline: React.FC = () => {
@@ -98,9 +97,9 @@ export const ActivityTimeline: React.FC = () => {
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <CardTitle>Today's Schedule & Timeline</CardTitle>
+            <CardTitle>Today&apos;s Schedule & Timeline</CardTitle>
             <CardDescription>
-              Chronological breakdown of today's planned execution. Changes here do not alter your master recurring routine.
+              Chronological breakdown of today&apos;s planned execution. Changes here do not alter your master recurring routine.
             </CardDescription>
           </div>
           <Badge variant="outline">{activities.length} Activities</Badge>

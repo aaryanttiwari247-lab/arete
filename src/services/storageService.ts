@@ -60,8 +60,27 @@ const KEYS = {
   WATER_TARGET: 'daytrack_water_target',
 };
 
+const STORAGE_CLEAN_VERSION = 'daytrack_clean_v2';
+let hasStorageBeenChecked = false;
+
+function checkStorageReset(): void {
+  if (typeof window === 'undefined' || hasStorageBeenChecked) return;
+  hasStorageBeenChecked = true;
+  try {
+    const version = localStorage.getItem('daytrack_storage_version');
+    if (version !== STORAGE_CLEAN_VERSION) {
+      // Clear previously cached dummy records
+      for (const k of Object.values(KEYS)) {
+        localStorage.removeItem(k);
+      }
+      localStorage.setItem('daytrack_storage_version', STORAGE_CLEAN_VERSION);
+    }
+  } catch {}
+}
+
 function getItem<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
+  checkStorageReset();
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : fallback;

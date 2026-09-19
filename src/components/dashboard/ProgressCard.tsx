@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/ui/Card';
 import { useData } from '@/context/DataContext';
 import { CheckCircle2, CircleDashed, Clock, Sparkles } from 'lucide-react';
@@ -8,16 +8,18 @@ import { CheckCircle2, CircleDashed, Clock, Sparkles } from 'lucide-react';
 export const ProgressCard: React.FC = () => {
   const { activities } = useData();
 
-  const total = activities.length;
-  const completed = activities.filter(a => a.status === 'completed').length;
-  const remaining = activities.filter(a => a.status === 'pending' || a.status === 'rescheduled').length;
-  const skipped = activities.filter(a => a.status === 'skipped').length;
-  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-  // SVG Circular Progress values
   const radius = 48;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const { total, completed, remaining, percentage, strokeDashoffset } = useMemo(() => {
+    const total = activities.length;
+    const completed = activities.filter(a => a.status === 'completed').length;
+    const remaining = activities.filter(a => a.status === 'pending' || a.status === 'rescheduled').length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return { total, completed, remaining, percentage, strokeDashoffset };
+  }, [activities, circumference]);
 
   return (
     <Card className="relative overflow-hidden border-2 border-[var(--border-subtle)] bg-[var(--bg-surface)]">
@@ -30,7 +32,7 @@ export const ProgressCard: React.FC = () => {
         <div className="space-y-4 text-center sm:text-left flex-1">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--accent-subtle)] text-[var(--accent-primary)] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Today's Execution</span>
+            <span>Today&apos;s Execution</span>
           </div>
 
           <div>
@@ -38,7 +40,9 @@ export const ProgressCard: React.FC = () => {
               {percentage}% Completed
             </h2>
             <p className="text-xs sm:text-sm text-[var(--text-muted)] mt-1">
-              {completed === total && total > 0
+              {total === 0
+                ? "No activities scheduled for today yet. Tap 'Add Activity' above to start your day."
+                : completed === total
                 ? "Phenomenal! You've accomplished all scheduled activities for today."
                 : `${completed} of ${total} planned activities completed so far.`}
             </p>

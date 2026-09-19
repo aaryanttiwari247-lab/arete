@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useData } from '@/context/DataContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
@@ -17,58 +17,97 @@ import {
   Moon,
   Droplets,
   Flame,
-  Target,
   ArrowRight,
   CheckCircle2,
 } from 'lucide-react';
 
 export default function AnalyticsPage() {
-  const { studySessions, workoutSessions, sleepRecords, totalWaterToday, habits, goals } = useData();
+  const { activities, studySessions, workoutSessions, sleepRecords, habits } = useData();
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 
-  // Weekly data points for visual charts
-  const weeklyActivityData = [
-    { day: 'Mon', planned: 9, completed: 8, rate: 89 },
-    { day: 'Tue', planned: 9, completed: 9, rate: 100 },
-    { day: 'Wed', planned: 8, completed: 7, rate: 88 },
-    { day: 'Thu', planned: 9, completed: 8, rate: 89 },
-    { day: 'Fri', planned: 8, completed: 6, rate: 75 },
-    { day: 'Sat', planned: 6, completed: 5, rate: 83 },
-    { day: 'Sun', planned: 5, completed: 4, rate: 80 },
-  ];
+  // Dynamically calculate metrics with useMemo
+  const {
+    totalActivities,
+    completedActivities,
+    adherenceRate,
+    totalStudyMinutes,
+    studyHours,
+    studyMins,
+    avgFocusRating,
+    totalSleepMinutes,
+    avgSleepMinutes,
+    sleepHours,
+    sleepMins,
+    completedHabitsToday,
+    topStreak,
+  } = useMemo(() => {
+    const total = activities.length;
+    const completed = activities.filter(a => a.status === 'completed').length;
+    const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    const studyMin = studySessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+    const sHours = Math.floor(studyMin / 60);
+    const sMins = studyMin % 60;
+    const focusRating = studySessions.length > 0
+      ? (studySessions.reduce((acc, s) => acc + s.focusRating, 0) / studySessions.length).toFixed(1)
+      : '0.0';
+
+    const sleepMin = sleepRecords.reduce((acc, s) => acc + s.durationMinutes, 0);
+    const avgSleep = sleepRecords.length > 0 ? Math.round(sleepMin / sleepRecords.length) : 0;
+    const slpHours = Math.floor(avgSleep / 60);
+    const slpMins = avgSleep % 60;
+
+    const habitsDone = habits.filter(h => h.completedToday).length;
+    const streak = habits.reduce((max, h) => Math.max(max, h.currentStreak), 0);
+
+    return {
+      totalActivities: total,
+      completedActivities: completed,
+      adherenceRate: rate,
+      totalStudyMinutes: studyMin,
+      studyHours: sHours,
+      studyMins: sMins,
+      avgFocusRating: focusRating,
+      totalSleepMinutes: sleepMin,
+      avgSleepMinutes: avgSleep,
+      sleepHours: slpHours,
+      sleepMins: slpMins,
+      completedHabitsToday: habitsDone,
+      topStreak: streak,
+    };
+  }, [activities, studySessions, sleepRecords, habits]);
+
+  // 7-day breakdown from activities
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weeklyActivityData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+    // If user has activities logged, count them; otherwise 0
+    return { day, planned: 0, completed: 0, rate: 0 };
+  });
 
   const plannedVsActualItems = [
     {
       category: 'Academic Study',
-      plannedHours: 14.0,
-      actualHours: 11.6, // 11h 35m
+      plannedHours: 10.0,
+      actualHours: totalStudyMinutes / 60,
       icon: <BookOpen className="w-4 h-4 text-sky-400" />,
       color: '#38bdf8',
-      summary: '11h 35m completed of 14h planned',
+      summary: totalStudyMinutes > 0 ? `${studyHours}h ${studyMins}m completed` : 'No study logged yet',
     },
     {
       category: 'Physical Workout',
       plannedHours: 5.0,
-      actualHours: 4.16, // 4h 10m
+      actualHours: workoutSessions.reduce((acc, w) => acc + w.durationMinutes, 0) / 60,
       icon: <Dumbbell className="w-4 h-4 text-amber-400" />,
       color: '#f97316',
-      summary: '4h 10m completed of 5h planned',
-    },
-    {
-      category: 'Software Coding',
-      plannedHours: 7.0,
-      actualHours: 8.33, // 8h 20m
-      icon: <Flame className="w-4 h-4 text-violet-400" />,
-      color: '#818cf8',
-      summary: '8h 20m completed (+1h 20m above baseline)',
+      summary: workoutSessions.length > 0 ? `${workoutSessions.length} sessions completed` : 'No workouts logged yet',
     },
     {
       category: 'Sleep & Recovery',
       plannedHours: 56.0,
-      actualHours: 52.2,
+      actualHours: totalSleepMinutes / 60,
       icon: <Moon className="w-4 h-4 text-indigo-400" />,
       color: '#a855f7',
-      summary: '7h 28m nightly average',
+      summary: sleepRecords.length > 0 ? `${sleepHours}h ${sleepMins}m average per night` : 'No sleep logged yet',
     },
   ];
 
@@ -114,11 +153,10 @@ export default function AnalyticsPage() {
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">87%</span>
-            <span className="text-xs text-emerald-400 font-semibold">+4% vs last week</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">{adherenceRate}%</span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            47 of 54 planned activities fulfilled
+            {completedActivities} of {totalActivities} planned activities fulfilled
           </p>
         </Card>
 
@@ -130,11 +168,15 @@ export default function AnalyticsPage() {
             <BookOpen className="w-4 h-4 text-sky-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">14h 35m</span>
-            <span className="text-xs text-[var(--text-muted)]">across 3 subjects</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">
+              {studyHours}h {studyMins}m
+            </span>
+            <span className="text-xs text-[var(--text-muted)]">
+              {studySessions.length} {studySessions.length === 1 ? 'session' : 'sessions'}
+            </span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            Average focus rating: 4.7 / 5.0
+            Average focus rating: {avgFocusRating} / 5.0
           </p>
         </Card>
 
@@ -146,11 +188,13 @@ export default function AnalyticsPage() {
             <Moon className="w-4 h-4 text-indigo-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">7h 28m</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">
+              {sleepHours}h {sleepMins}m
+            </span>
             <span className="text-xs text-indigo-400 font-semibold">avg / night</span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            Variance: ±18 min
+            {sleepRecords.length} recorded nights
           </p>
         </Card>
 
@@ -162,11 +206,13 @@ export default function AnalyticsPage() {
             <Flame className="w-4 h-4 text-orange-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">6 of 6</span>
-            <span className="text-xs text-orange-400 font-semibold">18d max</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">
+              {completedHabitsToday} of {habits.length}
+            </span>
+            <span className="text-xs text-orange-400 font-semibold">{topStreak}d peak</span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            Zero missed days this week
+            {habits.length === 0 ? 'No habits configured' : `${habits.length} tracked habits`}
           </p>
         </Card>
       </div>
@@ -180,31 +226,41 @@ export default function AnalyticsPage() {
               Percentage of planned routine items completed across each day of the current week.
             </CardDescription>
           </div>
-          <Badge variant="info">Weekly Average: 87%</Badge>
+          <Badge variant="info">Weekly Average: {adherenceRate}%</Badge>
         </div>
 
         {/* Visual Bar Chart */}
         <div className="pt-4 pb-2">
-          <div className="h-56 flex items-end justify-between gap-2 sm:gap-6 border-b border-[var(--border-subtle)] pb-2">
-            {weeklyActivityData.map(item => {
-              return (
-                <div key={item.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <span className="text-[11px] font-mono text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">
-                    {item.rate}%
-                  </span>
-                  <div className="w-full max-w-[48px] bg-[var(--bg-surface-elevated)] rounded-t-xl overflow-hidden h-full flex items-end p-0.5">
-                    <div
-                      className="w-full rounded-t-lg bg-gradient-to-t from-[var(--accent-primary)] to-sky-400 transition-all duration-500 group-hover:opacity-90 shadow-sm"
-                      style={{ height: `${item.rate}%` }}
-                    />
+          {totalActivities === 0 ? (
+            <div className="h-44 flex flex-col items-center justify-center space-y-2 border border-dashed border-[var(--border-subtle)] rounded-xl text-center p-6">
+              <BarChart3 className="w-8 h-8 text-[var(--text-muted)] opacity-50" />
+              <p className="text-sm font-semibold text-[var(--text-primary)]">No activity data logged yet</p>
+              <p className="text-xs text-[var(--text-muted)] max-w-sm">
+                As you check off scheduled tasks and routine items, daily execution bars will populate here.
+              </p>
+            </div>
+          ) : (
+            <div className="h-56 flex items-end justify-between gap-2 sm:gap-6 border-b border-[var(--border-subtle)] pb-2">
+              {weeklyActivityData.map(item => {
+                return (
+                  <div key={item.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                    <span className="text-[11px] font-mono text-[var(--text-muted)] group-hover:text-[var(--text-primary)] transition-colors">
+                      {item.rate}%
+                    </span>
+                    <div className="w-full max-w-[48px] bg-[var(--bg-surface-elevated)] rounded-t-xl overflow-hidden h-full flex items-end p-0.5">
+                      <div
+                        className="w-full rounded-t-lg bg-gradient-to-t from-[var(--accent-primary)] to-sky-400 transition-all duration-500 group-hover:opacity-90 shadow-sm"
+                        style={{ height: `${item.rate}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-[var(--text-secondary)] mt-1">
+                      {item.day}
+                    </span>
                   </div>
-                  <span className="text-xs font-bold text-[var(--text-secondary)] mt-1">
-                    {item.day}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </Card>
 
@@ -222,7 +278,7 @@ export default function AnalyticsPage() {
 
         <div className="space-y-6 pt-2">
           {plannedVsActualItems.map(item => {
-            const ratio = Math.min(Math.round((item.actualHours / item.plannedHours) * 100), 120);
+            const ratio = item.plannedHours > 0 ? Math.min(Math.round((item.actualHours / item.plannedHours) * 100), 120) : 0;
 
             return (
               <div key={item.category} className="space-y-2 p-4 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)]">

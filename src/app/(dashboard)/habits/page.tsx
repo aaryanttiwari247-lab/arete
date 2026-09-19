@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import { Habit, ActivityCategory } from '@/types/models';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
@@ -15,9 +15,6 @@ import {
   CheckCircle2,
   Circle,
   Trophy,
-  Calendar,
-  Sparkles,
-  TrendingUp,
 } from 'lucide-react';
 
 export default function HabitsPage() {
@@ -29,8 +26,12 @@ export default function HabitsPage() {
   const [category, setCategory] = useState<ActivityCategory>('reading');
   const [color, setColor] = useState('#818cf8');
 
-  const totalCompletedToday = habits.filter(h => h.completedToday).length;
-  const bestStreak = habits.reduce((max, h) => Math.max(max, h.longestStreak), 0);
+  const { totalCompletedToday, bestStreak } = useMemo(() => {
+    return {
+      totalCompletedToday: habits.filter(h => h.completedToday).length,
+      bestStreak: habits.reduce((max, h) => Math.max(max, h.longestStreak), 0),
+    };
+  }, [habits]);
 
   const handleCreateHabit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,84 +130,94 @@ export default function HabitsPage() {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-[var(--text-primary)]">Active Habits</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {habits.map(habit => {
-            const isCompleted = habit.completedToday;
+        {habits.length === 0 ? (
+          <Card className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+            <Flame className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
+            <h4 className="text-base font-semibold text-[var(--text-primary)]">No habits created yet</h4>
+            <p className="text-xs text-[var(--text-muted)] max-w-sm">
+              Establish positive daily rituals across reading, hydration, workouts, coding, and mindfulness to compound momentum.
+            </p>
+            <Button size="sm" onClick={() => setModalOpen(true)}>Create Your First Habit</Button>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {habits.map(habit => {
+              const isCompleted = habit.completedToday;
 
-            return (
-              <Card key={habit.id} className="p-5 space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: habit.color }}
-                      />
-                      <h4 className="font-semibold text-base text-[var(--text-primary)]">
-                        {habit.name}
-                      </h4>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                      <Badge category={habit.category} size="sm" />
-                      <span>•</span>
-                      <span className="flex items-center gap-1 text-orange-400 font-semibold">
-                        <Flame className="w-3.5 h-3.5" />
-                        {habit.currentStreak} day streak
-                      </span>
-                      <span>(Best: {habit.longestStreak}d)</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => toggleHabitToday(habit.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                      isCompleted
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-sm'
-                        : 'bg-[var(--bg-surface-elevated)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)]'
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Completed</span>
-                      </>
-                    ) : (
-                      <>
-                        <Circle className="w-4 h-4" />
-                        <span>Check Off</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* 28-DAY CALENDAR HEATMAP GRID */}
-                <div className="pt-2 border-t border-[var(--border-subtle)] space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
-                    <span>Last 28 Days</span>
-                    <span>Monthly View</span>
-                  </div>
-                  <div className="grid grid-cols-14 gap-1 sm:gap-1.5">
-                    {days.map(d => {
-                      // Deterministic mock fill pattern based on streak
-                      const filled = d > 28 - habit.currentStreak || (d % 3 !== 0 && d < 20);
-                      return (
-                        <div
-                          key={d}
-                          title={`Day ${d}: ${filled ? 'Completed' : 'Missed'}`}
-                          className="h-3 rounded-sm transition-all"
-                          style={{
-                            backgroundColor: filled ? habit.color : 'var(--border-subtle)',
-                            opacity: filled ? 0.85 : 0.35,
-                          }}
+              return (
+                <Card key={habit.id} className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: habit.color }}
                         />
-                      );
-                    })}
+                        <h4 className="font-semibold text-base text-[var(--text-primary)]">
+                          {habit.name}
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                        <Badge category={habit.category} size="sm" />
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-orange-400 font-semibold">
+                          <Flame className="w-3.5 h-3.5" />
+                          {habit.currentStreak} day streak
+                        </span>
+                        <span>(Best: {habit.longestStreak}d)</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => toggleHabitToday(habit.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                        isCompleted
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-sm'
+                          : 'bg-[var(--bg-surface-elevated)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)]'
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span>Completed</span>
+                        </>
+                      ) : (
+                        <>
+                          <Circle className="w-4 h-4" />
+                          <span>Check Off</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+
+                  {/* 28-DAY CALENDAR HEATMAP GRID */}
+                  <div className="pt-2 border-t border-[var(--border-subtle)] space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
+                      <span>Last 28 Days</span>
+                      <span>Monthly View</span>
+                    </div>
+                    <div className="grid grid-cols-14 gap-1 sm:gap-1.5">
+                      {days.map(d => {
+                        const filled = d > 28 - habit.currentStreak;
+                        return (
+                          <div
+                            key={d}
+                            title={`Day ${d}: ${filled ? 'Completed' : 'Missed'}`}
+                            className="h-3 rounded-sm transition-all"
+                            style={{
+                              backgroundColor: filled ? habit.color : 'var(--border-subtle)',
+                              opacity: filled ? 0.85 : 0.35,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Modal: New Habit */}

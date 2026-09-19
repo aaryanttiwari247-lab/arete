@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
 import { Button } from '@/ui/Button';
@@ -11,51 +11,83 @@ import {
   BookOpen,
   Dumbbell,
   Moon,
-  Flame,
-  CheckCircle2,
-  TrendingUp,
-  Sparkles,
   ArrowRight,
   Info,
+  Sparkles,
 } from 'lucide-react';
 
+import { useData } from '@/context/DataContext';
+
 export default function PlannedVsActualPage() {
+  const { studySessions, workoutSessions, sleepRecords, subjects } = useData();
+
+  const {
+    plannedStudyHours,
+    plannedWorkoutHours,
+    plannedSleepHours,
+    actualStudyHours,
+    actualWorkoutHours,
+    actualSleepHours,
+    hasAnyData,
+  } = useMemo(() => {
+    const totalStudy = studySessions.reduce((acc, s) => acc + s.durationMinutes, 0);
+    const totalWorkout = workoutSessions.reduce((acc, w) => acc + w.durationMinutes, 0);
+    const totalSleep = sleepRecords.reduce((acc, s) => acc + s.durationMinutes, 0);
+
+    const plannedStudy = subjects.reduce((acc, s) => acc + s.targetHoursPerWeek, 0) || 10;
+    const plannedWorkout = 5.0;
+    const plannedSleep = 56.0;
+
+    return {
+      plannedStudyHours: plannedStudy,
+      plannedWorkoutHours: plannedWorkout,
+      plannedSleepHours: plannedSleep,
+      actualStudyHours: totalStudy / 60,
+      actualWorkoutHours: totalWorkout / 60,
+      actualSleepHours: totalSleep / 60,
+      hasAnyData: totalStudy > 0 || totalWorkout > 0 || totalSleep > 0,
+    };
+  }, [studySessions, workoutSessions, sleepRecords, subjects]);
+
   const categories = [
     {
       name: 'Academic Deep Study',
-      plannedHours: 14.0,
-      actualHours: 11.6, // 11h 35m
+      plannedHours: plannedStudyHours,
+      actualHours: actualStudyHours,
       icon: <BookOpen className="w-5 h-5 text-sky-400" />,
       color: '#38bdf8',
-      summary: '11h 35m achieved across Distributed Systems & Cloud Architecture.',
-      observation: 'Consistent 2h blocks in early afternoon yielded highest focus retention.',
+      summary: actualStudyHours > 0
+        ? `${actualStudyHours.toFixed(1)}h completed across logged subjects.`
+        : 'No study hours logged yet.',
+      observation: actualStudyHours > 0
+        ? 'Sessions logged with high focus retention.'
+        : 'Schedule dedicated study blocks in Weekly Routine to track adherence.',
     },
     {
       name: 'Physical Workout & Training',
-      plannedHours: 5.0,
-      actualHours: 4.16, // 4h 10m
+      plannedHours: plannedWorkoutHours,
+      actualHours: actualWorkoutHours,
       icon: <Dumbbell className="w-5 h-5 text-amber-400" />,
       color: '#f97316',
-      summary: '4h 10m completed of 5h planned (5 high-intensity sessions).',
-      observation: 'Progressive overload was sustained across all push and pull compound lifts.',
-    },
-    {
-      name: 'Software Coding & Projects',
-      plannedHours: 7.0,
-      actualHours: 8.33, // 8h 20m
-      icon: <Flame className="w-5 h-5 text-violet-400" />,
-      color: '#818cf8',
-      summary: '8h 20m completed (+1h 20m above baseline schedule).',
-      observation: 'Extended evening flow state on Next.js component system architecture.',
+      summary: actualWorkoutHours > 0
+        ? `${workoutSessions.length} sessions logged (${actualWorkoutHours.toFixed(1)}h total).`
+        : 'No workout sessions logged yet.',
+      observation: actualWorkoutHours > 0
+        ? 'Consistent active duration recorded.'
+        : 'Log workouts with sets or simple active duration.',
     },
     {
       name: 'Nightly Sleep Recovery',
-      plannedHours: 56.0,
-      actualHours: 52.2, // ~7h 28m avg
+      plannedHours: plannedSleepHours,
+      actualHours: actualSleepHours,
       icon: <Moon className="w-5 h-5 text-indigo-400" />,
       color: '#a855f7',
-      summary: '7h 28m nightly average across all 7 recorded nights.',
-      observation: 'Bedtime consistency had a low variance of ±18 minutes.',
+      summary: actualSleepHours > 0
+        ? `${(actualSleepHours / (sleepRecords.length || 1)).toFixed(1)}h average per night.`
+        : 'No sleep records logged yet.',
+      observation: actualSleepHours > 0
+        ? 'Sleep data recorded across nights.'
+        : 'Log nightly bedtimes and wake times to calibrate recovery.',
     },
   ];
 

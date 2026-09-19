@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '@/context/DataContext';
 import { SleepRecord } from '@/types/models';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
@@ -11,14 +11,10 @@ import { Input } from '@/ui/Input';
 import {
   Moon,
   Plus,
+  TrendingUp,
+  CheckCircle2,
   Clock,
   Star,
-  CheckCircle2,
-  Calendar,
-  Sparkles,
-  Info,
-  ShieldCheck,
-  TrendingUp,
 } from 'lucide-react';
 
 export default function SleepPage() {
@@ -31,23 +27,23 @@ export default function SleepPage() {
   const [quality, setQuality] = useState<1 | 2 | 3 | 4 | 5>(4);
   const [notes, setNotes] = useState('');
 
-  // Calculations
-  const latestSleep = sleepRecords[0] || {
-    bedtime: '23:10',
-    wakeTime: '07:05',
-    durationMinutes: 475,
-    quality: 4,
-    notes: 'Restful recovery',
-  };
+  // Calculations with useMemo
+  const { latestSleep, avgMinutes, avgHours, avgMins, plannedVsActualDiff } = useMemo(() => {
+    const latest = sleepRecords[0] || null;
+    const avg = sleepRecords.length > 0
+      ? Math.round(sleepRecords.reduce((acc, s) => acc + s.durationMinutes, 0) / sleepRecords.length)
+      : 0;
+    const targetMin = sleepConfig.targetHours * 60;
+    const diff = latest ? latest.durationMinutes - targetMin : 0;
 
-  const avgMinutes = Math.round(
-    sleepRecords.reduce((acc, s) => acc + s.durationMinutes, 0) / (sleepRecords.length || 1)
-  );
-  const avgHours = Math.floor(avgMinutes / 60);
-  const avgMins = avgMinutes % 60;
-
-  const plannedMinutes = sleepConfig.targetHours * 60;
-  const plannedVsActualDiff = latestSleep.durationMinutes - plannedMinutes;
+    return {
+      latestSleep: latest,
+      avgMinutes: avg,
+      avgHours: Math.floor(avg / 60),
+      avgMins: avg % 60,
+      plannedVsActualDiff: diff,
+    };
+  }, [sleepRecords, sleepConfig.targetHours]);
 
   const handleSaveSleep = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,14 +100,20 @@ export default function SleepPage() {
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-[var(--text-primary)]">
-              {Math.floor(latestSleep.durationMinutes / 60)}h {latestSleep.durationMinutes % 60}m
+              {latestSleep
+                ? `${Math.floor(latestSleep.durationMinutes / 60)}h ${latestSleep.durationMinutes % 60}m`
+                : '0h 0m'}
             </span>
-            <Badge variant="success" size="sm">
-              {latestSleep.quality}/5 Quality
-            </Badge>
+            {latestSleep && (
+              <Badge variant="success" size="sm">
+                {latestSleep.quality}/5 Quality
+              </Badge>
+            )}
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            In bed {latestSleep.bedtime} → Awoke {latestSleep.wakeTime}
+            {latestSleep
+              ? `In bed ${latestSleep.bedtime} → Awoke ${latestSleep.wakeTime}`
+              : 'No sleep record for last night'}
           </p>
         </Card>
 
@@ -129,7 +131,7 @@ export default function SleepPage() {
             <span className="text-xs text-[var(--text-muted)]">avg / night</span>
           </div>
           <p className="text-[11px] text-emerald-400 mt-2 font-medium">
-            Within target circadian zone
+            {sleepRecords.length > 0 ? 'Within target circadian zone' : 'Target: 8h restorative rest'}
           </p>
         </Card>
 
@@ -141,11 +143,12 @@ export default function SleepPage() {
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">92%</span>
-            <span className="text-xs text-[var(--text-muted)]">Variance ±18m</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">
+              {sleepRecords.length > 0 ? 'Consistent' : '--'}
+            </span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            Circadian rhythm stable
+            {sleepRecords.length > 0 ? 'Variance monitored' : 'Log sleep to assess consistency'}
           </p>
         </Card>
 
@@ -158,13 +161,15 @@ export default function SleepPage() {
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-bold text-[var(--text-primary)]">
-              {sleepConfig.targetHours}h vs {Math.floor(latestSleep.durationMinutes / 60)}h
+              {sleepConfig.targetHours}h vs {latestSleep ? Math.floor(latestSleep.durationMinutes / 60) : 0}h
             </span>
           </div>
           <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            {plannedVsActualDiff >= 0
-              ? `+${plannedVsActualDiff}m over planned target`
-              : `${Math.abs(plannedVsActualDiff)}m under planned target`}
+            {latestSleep
+              ? plannedVsActualDiff >= 0
+                ? `+${plannedVsActualDiff}m over planned target`
+                : `${Math.abs(plannedVsActualDiff)}m under planned target`
+              : 'Target: ' + sleepConfig.targetHours + 'h daily sleep'}
           </p>
         </Card>
       </div>
@@ -183,44 +188,55 @@ export default function SleepPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="divide-y divide-[var(--border-subtle)]">
-            {sleepRecords.map(record => (
-              <div
-                key={record.id}
-                className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold text-[var(--text-primary)] font-mono">
-                      {record.date}
-                    </span>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      ({record.bedtime} → {record.wakeTime})
-                    </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-semibold font-mono">
-                      {Math.floor(record.durationMinutes / 60)}h {record.durationMinutes % 60}m
-                    </span>
+          {sleepRecords.length === 0 ? (
+            <div className="py-12 text-center flex flex-col items-center justify-center space-y-3">
+              <Moon className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
+              <p className="text-sm font-semibold text-[var(--text-primary)]">No sleep records logged yet</p>
+              <p className="text-xs text-[var(--text-muted)] max-w-sm">
+                Log your bedtime, wake time, and sleep quality to build your recovery metrics.
+              </p>
+              <Button size="sm" onClick={() => setLogModalOpen(true)}>Log Last Night's Sleep</Button>
+            </div>
+          ) : (
+            <div className="divide-y divide-[var(--border-subtle)]">
+              {sleepRecords.map(record => (
+                <div
+                  key={record.id}
+                  className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-[var(--text-primary)] font-mono">
+                        {record.date}
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)]">
+                        ({record.bedtime} → {record.wakeTime})
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-semibold font-mono">
+                        {Math.floor(record.durationMinutes / 60)}h {record.durationMinutes % 60}m
+                      </span>
+                    </div>
+                    {record.notes && (
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">{record.notes}</p>
+                    )}
                   </div>
-                  {record.notes && (
-                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">{record.notes}</p>
-                  )}
-                </div>
 
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <Star
-                      key={star}
-                      className={`w-4 h-4 ${
-                        star <= record.quality
-                          ? 'text-amber-400 fill-amber-400'
-                          : 'text-[var(--border-subtle)]'
-                      }`}
-                    />
-                  ))}
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${
+                          star <= record.quality
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-[var(--border-subtle)]'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

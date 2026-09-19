@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/Card';
 import { Button } from '@/ui/Button';
@@ -8,7 +8,6 @@ import { Badge } from '@/ui/Badge';
 import { Select } from '@/ui/Select';
 import { Input } from '@/ui/Input';
 import {
-  Timer,
   Play,
   Pause,
   RotateCcw,
@@ -40,7 +39,7 @@ export default function FocusTimerPage() {
 
   // Association with subject
   const [selectedSubjectId, setSelectedSubjectId] = useState(subjects[0]?.id || '');
-  const [topic, setTopic] = useState('Deep Architecture & Systems Design');
+  const [topic, setTopic] = useState('');
 
   useEffect(() => {
     const s = getInitialSeconds();
@@ -49,20 +48,6 @@ export default function FocusTimerPage() {
     setIsRunning(false);
     setSessionCompleted(false);
   }, [timerMode, isBreak]);
-
-  useEffect(() => {
-    let interval: any = null;
-    if (isRunning && secondsRemaining > 0) {
-      interval = setInterval(() => {
-        setSecondsRemaining(prev => prev - 1);
-      }, 1000);
-    } else if (secondsRemaining === 0 && isRunning) {
-      setIsRunning(false);
-      setSessionCompleted(true);
-      handleAutoSaveSession();
-    }
-    return () => clearInterval(interval);
-  }, [isRunning, secondsRemaining]);
 
   const handleAutoSaveSession = () => {
     if (!isBreak) {
@@ -80,6 +65,22 @@ export default function FocusTimerPage() {
       });
     }
   };
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const interval = setInterval(() => {
+      setSecondsRemaining(prev => {
+        if (prev <= 1) {
+          setIsRunning(false);
+          setSessionCompleted(true);
+          handleAutoSaveSession();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isRunning, isBreak, totalSeconds, selectedSubjectId, topic, timerMode, subjects]);
 
   const handleToggleTimer = () => {
     setIsRunning(!isRunning);
@@ -279,7 +280,7 @@ export default function FocusTimerPage() {
             label="Associate With Subject"
             value={selectedSubjectId}
             onChange={e => setSelectedSubjectId(e.target.value)}
-            options={subjects.map(s => ({ value: s.id, label: s.name }))}
+            options={subjects.length > 0 ? subjects.map(s => ({ value: s.id, label: s.name })) : [{ value: '', label: 'General / No Subject' }]}
           />
           <Input
             label="Topic / Milestone"
